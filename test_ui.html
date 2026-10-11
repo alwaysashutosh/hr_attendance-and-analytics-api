@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance & Analytics API - Interactive Test Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --surface: rgba(18, 24, 38, 0.85);
+      --surface-card: rgba(23, 31, 50, 0.7);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --secondary: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      background: rgba(9, 13, 22, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .brand-title h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-title span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .health-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--success);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .health-pill.error {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: var(--danger);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* Main Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 71px);
+    }
+
+    /* Navigation Sidebar */
+    nav.sidebar {
+      width: 250px;
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 10px 12px 4px;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+
+    .nav-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .nav-btn.active {
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    /* Content Area */
+    main.content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .tab-pane {
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section & Cards */
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .section-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Form Inputs */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    input, select, textarea {
+      background: rgba(11, 15, 24, 0.7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      outline: none;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 10px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    /* Data Tables */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(11, 15, 24, 0.4);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 12px 16px;
+      color: var(--text-muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      white-space: nowrap;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-present { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .badge-wfh { background: rgba(6, 182, 212, 0.15); color: #38bdf8; }
+    .badge-on_duty { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; }
+    .badge-absent { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .badge-leave { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .badge-ixscan { background: rgba(16, 185, 129, 0.2); color: #10b981; font-family: var(--font-mono); }
+    .badge-collscan { background: rgba(239, 68, 68, 0.2); color: #ef4444; font-family: var(--font-mono); }
+
+    /* Live Response Drawer / Inspector */
+    .inspector-panel {
+      background: rgba(11, 15, 24, 0.95);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .inspector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .inspector-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    pre.json-viewer {
+      background: #060910;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #38bdf8;
+      max-height: 280px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Metric Cards */
+    .metric-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="logo-badge">H</div>
+      <div class="brand-title">
+        <h1>Attendance & Analytics API</h1>
+        <span>Interactive Developer Playground</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div id="healthBadge" class="health-pill" onclick="checkHealth()">
+        <span class="status-dot"></span>
+        <span id="healthText">Checking Health...</span>
+      </div>
+      <a href="/docs" target="_blank" class="btn btn-secondary">Open Swagger API Docs ↗</a>
+    </div>
+  </header>
+
+  <!-- App Layout -->
+  <div class="app-container">
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="nav-label">Overview</div>
+      <button class="nav-btn active" onclick="switchTab('dashboardTab', this)">📊 System Status</button>
+      
+      <div class="nav-label">Core Resources</div>
+      <button class="nav-btn" onclick="switchTab('employeesTab', this)">👥 Employees</button>
+      <button class="nav-btn" onclick="switchTab('attendanceTab', this)">🕒 Attendance & Punches</button>
+      <button class="nav-btn" onclick="switchTab('regularizeTab', this)">✏️ Regularize (Audit)</button>
+
+      <div class="nav-label">Intelligence</div>
+      <button class="nav-btn" onclick="switchTab('analyticsTab', this)">📈 Analytics & Trends</button>
+      <button class="nav-btn" onclick="switchTab('explainTab', this)">🔍 MongoDB Explain Plans</button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content">
+
+      <!-- Tab: Dashboard / Overview -->
+      <section id="dashboardTab" class="tab-pane active">
+        <h2 class="section-title">System Overview</h2>
+        <p class="section-subtitle">Real-time health, cluster connectivity, and database metrics.</p>
+
+        <div class="grid-3">
+          <div class="metric-card">
+            <span class="metric-label">MongoDB Cluster State</span>
+            <span class="metric-value" id="statHealth">Ready</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Registered Employees</span>
+            <span class="metric-value" id="statEmployees">-</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Attendance Records</span>
+            <span class="metric-value" id="statAttendance">-</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <span class="card-title">Quick Actions</span>
+          </div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="loadEmployees()">Refresh Employees</button>
+            <button class="btn btn-primary" onclick="loadAttendance()">Refresh Attendance</button>
+            <button class="btn btn-secondary" onclick="checkHealth()">Ping MongoDB</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: Employees -->
+      <section id="employeesTab" class="tab-pane">
+        <h2 class="section-title">Employee Directory</h2>
+        <p class="section-subtitle">List registered staff and create new employees with database-enforced uniqueness.</p>
+
+        <div class="grid-2">
+          <!-- Create Employee Form -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Create New Employee (POST /employees)</span>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Emp Code (e.g., EMP0010)</label>
+                <input id="empCodeIn" type="text" value="EMP0010" placeholder="EMP0001">
+              </div>
+              <div class="form-group">
+                <label>Full Name</label>
+                <input id="empNameIn" type="text" value="Rohit Sharma" placeholder="Name">
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Email Address</label>
+                <input id="empEmailIn" type="email" value="rohit@example.com" placeholder="email@example.com">
+              </div>
+              <div class="form-group">
+                <label>Department</label>
+                <input id="empDeptIn" type="text" value="Engineering" placeholder="Department">
+              </div>
+            </div>
+            <div class="grid-3">
+              <div class="form-group">
+                <label>Shift Start (IST)</label>
+                <input id="empShiftStartIn" type="text" value="09:30" placeholder="09:30">
+              </div>
+              <div class="form-group">
+                <label>Shift End (IST)</label>
+                <input id="empShiftEndIn" type="text" value="18:30" placeholder="18:30">
+              </div>
+              <div class="form-group">
+                <label>Joined On</label>
+                <input id="empJoinedIn" type="date" value="2026-07-01">
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="createEmployee()">Register Employee</button>
+          </div>
+
+          <!-- Filter & List Controls -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Filter Directory (GET /employees)</span>
+            </div>
+            <div class="form-group">
+              <label>Filter by Department (Exact match)</label>
+              <input id="empFilterDept" type="text" placeholder="Engineering, Sales, Operations...">
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary" onclick="loadEmployees()">Apply Filter</button>
+              <button class="btn btn-secondary" onclick="document.getElementById('empFilterDept').value=''; loadEmployees();">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container" style="margin-top: 20px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Emp Code</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Shift Start</th>
+                <th>Shift End</th>
+                <th>Joined On</th>
+              </tr>
+            </thead>
+            <tbody id="employeesTableBody">
+              <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Loading employees...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab: Attendance -->
+      <section id="attendanceTab" class="tab-pane">
+        <h2 class="section-title">Attendance & Punch Actions</h2>
+        <p class="section-subtitle">Record daily biometric punches with R1-R5 calculations.</p>
+
+        <div class="grid-2">
+          <!-- Punch In -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Punch In (POST /attendance/punch-in)</span>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Employee Code</label>
+                <input id="punchInEmp" type="text" value="EMP0001">
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select id="punchInStatus">
+                  <option value="PRESENT">PRESENT</option>
+                  <option value="WFH">WFH</option>
+                  <option value="ON_DUTY">ON_DUTY</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-success" onclick="punchIn()">Record Punch-In</button>
+          </div>
+
+          <!-- Punch Out -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Punch Out (POST /attendance/punch-out)</span>
+            </div>
+            <div class="form-group">
+              <label>Employee Code</label>
+              <input id="punchOutEmp" type="text" value="EMP0001">
+            </div>
+            <button class="btn btn-primary" onclick="punchOut()">Record Punch-Out</button>
+          </div>
+        </div>
+
+        <!-- Attendance Table -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <span class="card-title">Live Attendance Logs (GET /attendance)</span>
+            <button class="btn btn-secondary" onclick="loadAttendance()">Refresh</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Emp Code</th>
+                  <th>Status</th>
+                  <th>Work Hours</th>
+                  <th>Late Min</th>
+                  <th>Overtime</th>
+                  <th>Half Day</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceTableBody">
+                <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Loading logs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: Regularize -->
+      <section id="regularizeTab" class="tab-pane">
+        <h2 class="section-title">Attendance Regularization</h2>
+        <p class="section-subtitle">Perform manual corrections with an immutable audit trail (`history`).</p>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Regularize Record (PATCH /attendance/{emp_code}/{date})</span>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Target Employee Code</label>
+              <input id="regEmpCode" type="text" value="EMP0001">
+            </div>
+            <div class="form-group">
+              <label>Attendance Date (YYYY-MM-DD)</label>
+              <input id="regDate" type="date" value="2026-07-06">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>New Status</label>
+              <select id="regStatus">
+                <option value="">Keep Existing</option>
+                <option value="PRESENT">PRESENT</option>
+                <option value="WFH">WFH</option>
+                <option value="ON_DUTY">ON_DUTY</option>
+                <option value="ABSENT">ABSENT (Clears punches)</option>
+                <option value="LEAVE">LEAVE (Clears punches)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Regularized By</label>
+              <input id="regBy" type="text" value="hr.admin">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Reason for Correction (5-200 chars)</label>
+            <input id="regReason" type="text" value="Biometric reader hardware sync delay">
+          </div>
+          <button class="btn btn-primary" onclick="regularizeRecord()">Apply Regularization</button>
+        </div>
+      </section>
+
+      <!-- Tab: Analytics -->
+      <section id="analyticsTab" class="tab-pane">
+        <h2 class="section-title">Analytics & Intelligence</h2>
+        <p class="section-subtitle">Pure MongoDB aggregation pipelines for monthly metrics, rankings, and trends.</p>
+
+        <!-- Analytics Controls -->
+        <div class="grid-3">
+          <!-- Monthly Summary -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Employee Monthly Summary</span>
+            </div>
+            <div class="form-group">
+              <label>Employee Code</label>
+              <input id="anEmpCode" type="text" value="EMP0001">
+            </div>
+            <div class="form-group">
+              <label>Month (YYYY-MM)</label>
+              <input id="anMonth" type="text" value="2026-07">
+            </div>
+            <button class="btn btn-primary" onclick="loadMonthlyAnalytics()">Query Monthly</button>
+          </div>
+
+          <!-- Dept Summary -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Department Summary</span>
+            </div>
+            <div class="form-group">
+              <label>Month (YYYY-MM)</label>
+              <input id="anDeptMonth" type="text" value="2026-07">
+            </div>
+            <button class="btn btn-primary" onclick="loadDeptSummary()">Query Departments</button>
+          </div>
+
+          <!-- Late Leaderboard -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Late-Comers Leaderboard</span>
+            </div>
+            <div class="form-group">
+              <label>Month (YYYY-MM)</label>
+              <input id="anLeadMonth" type="text" value="2026-07">
+            </div>
+            <button class="btn btn-primary" onclick="loadLeaderboard()">Query Leaderboard</button>
+          </div>
+        </div>
+
+        <!-- Trend Card -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <span class="card-title">Department Daily Trend with 7-Day Moving Average</span>
+          </div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label>Department</label>
+              <input id="trDept" type="text" value="Engineering">
+            </div>
+            <div class="form-group">
+              <label>From Date</label>
+              <input id="trFrom" type="date" value="2026-07-06">
+            </div>
+            <div class="form-group">
+              <label>To Date</label>
+              <input id="trTo" type="date" value="2026-07-10">
+            </div>
+          </div>
+          <button class="btn btn-secondary" onclick="loadTrend()">Generate Daily Trend</button>
+        </div>
+      </section>
+
+      <!-- Tab: Admin Explain -->
+      <section id="explainTab" class="tab-pane">
+        <h2 class="section-title">Query Plan Inspector (GET /admin/explain)</h2>
+        <p class="section-subtitle">Examine MongoDB query plans with executionStats to verify IXSCAN index usage.</p>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Select Endpoint to Explain</span>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Endpoint</label>
+              <select id="explainEndpoint">
+                <option value="attendance_list">attendance_list (find query)</option>
+                <option value="employee_monthly">employee_monthly (aggregation)</option>
+                <option value="department_summary">department_summary (aggregation)</option>
+                <option value="late_leaderboard">late_leaderboard (aggregation)</option>
+                <option value="department_trend">department_trend (aggregation)</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+              <button class="btn btn-primary" onclick="runExplain()">Run Execution Stats Explain</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Global Live Response Inspector Drawer -->
+      <div class="inspector-panel">
+        <div class="inspector-header">
+          <div class="inspector-status">
+            <span style="color: var(--text-muted);">Response:</span>
+            <span id="respStatus" class="badge badge-present">READY</span>
+            <span id="respTime" style="color: var(--text-muted); font-size: 11px;">0 ms</span>
+          </div>
+          <span id="respUrl" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">GET /health</span>
+        </div>
+        <pre id="jsonViewer" class="json-viewer">// Click any button to inspect API response output here...</pre>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Client JavaScript -->
+  <script>
+    const API_BASE = (!window.location.origin || window.location.origin === 'null' || window.location.protocol === 'file:') 
+      ? 'http://localhost:8000' 
+      : window.location.origin;
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    async function apiCall(path, options = {}) {
+      const startTime = performance.now();
+      const url = `${API_BASE}${path}`;
+      document.getElementById('respUrl').textContent = `${options.method || 'GET'} ${path}`;
+      
+      try {
+        const res = await fetch(url, {
+          headers: { 'Content-Type': 'application/json', ...options.headers },
+          ...options
+        });
+        const duration = Math.round(performance.now() - startTime);
+        const data = await res.json();
+        
+        const statusEl = document.getElementById('respStatus');
+        statusEl.textContent = `${res.status} ${res.statusText}`;
+        statusEl.className = res.ok ? 'badge badge-present' : 'badge badge-absent';
+        document.getElementById('respTime').textContent = `${duration} ms`;
+        document.getElementById('jsonViewer').textContent = JSON.stringify(data, null, 2);
+        
+        return { ok: res.ok, status: res.status, data };
+      } catch (err) {
+        document.getElementById('respStatus').textContent = 'ERROR';
+        document.getElementById('respStatus').className = 'badge badge-absent';
+        document.getElementById('jsonViewer').textContent = String(err);
+        return { ok: false, error: err };
+      }
+    }
+
+    async function checkHealth() {
+      const badge = document.getElementById('healthBadge');
+      const text = document.getElementById('healthText');
+      const res = await apiCall('/health');
+      if (res.ok && res.data.status === 'ok') {
+        badge.className = 'health-pill';
+        text.textContent = 'MongoDB Atlas Connected (200 OK)';
+        document.getElementById('statHealth').textContent = 'Online';
+      } else {
+        badge.className = 'health-pill error';
+        text.textContent = 'MongoDB Error (503)';
+        document.getElementById('statHealth').textContent = 'Unavailable';
+      }
+    }
+
+    async function loadEmployees() {
+      const dept = document.getElementById('empFilterDept').value;
+      const path = dept ? `/employees?department=${encodeURIComponent(dept)}` : '/employees';
+      const res = await apiCall(path);
+      if (res.ok) {
+        document.getElementById('statEmployees').textContent = res.data.total;
+        const tbody = document.getElementById('employeesTableBody');
+        tbody.innerHTML = '';
+        res.data.items.forEach(e => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="font-family: var(--font-mono); font-weight: 600; color: #a5b4fc;">${e.emp_code}</td>
+            <td>${e.name}</td>
+            <td>${e.email}</td>
+            <td>${e.department}</td>
+            <td>${e.shift_start}</td>
+            <td>${e.shift_end}</td>
+            <td>${e.joined_on}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    async function createEmployee() {
+      const body = {
+        emp_code: document.getElementById('empCodeIn').value,
+        name: document.getElementById('empNameIn').value,
+        email: document.getElementById('empEmailIn').value,
+        department: document.getElementById('empDeptIn').value,
+        shift_start: document.getElementById('empShiftStartIn').value,
+        shift_end: document.getElementById('empShiftEndIn').value,
+        joined_on: document.getElementById('empJoinedIn').value,
+      };
+      const res = await apiCall('/employees', {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      if (res.ok) loadEmployees();
+    }
+
+    async function punchIn() {
+      const body = {
+        emp_code: document.getElementById('punchInEmp').value,
+        status: document.getElementById('punchInStatus').value,
+      };
+      const res = await apiCall('/attendance/punch-in', {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      if (res.ok) loadAttendance();
+    }
+
+    async function punchOut() {
+      const body = {
+        emp_code: document.getElementById('punchOutEmp').value,
+      };
+      const res = await apiCall('/attendance/punch-out', {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      if (res.ok) loadAttendance();
+    }
+
+    async function loadAttendance() {
+      const res = await apiCall('/attendance');
+      if (res.ok) {
+        document.getElementById('statAttendance').textContent = res.data.total;
+        const tbody = document.getElementById('attendanceTableBody');
+        tbody.innerHTML = '';
+        res.data.items.forEach(a => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${a.date}</td>
+            <td style="font-family: var(--font-mono); font-weight: 600;">${a.emp_code}</td>
+            <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
+            <td>${a.work_hours !== null ? a.work_hours + ' hrs' : '-'}</td>
+            <td>${a.late_minutes ? a.late_minutes + ' min' : '0'}</td>
+            <td>${a.overtime_minutes ? a.overtime_minutes + ' min' : '0'}</td>
+            <td>${a.half_day ? '⚠️ Yes' : 'No'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    async function regularizeRecord() {
+      const empCode = document.getElementById('regEmpCode').value;
+      const date = document.getElementById('regDate').value;
+      const status = document.getElementById('regStatus').value;
+      const body = {
+        reason: document.getElementById('regReason').value,
+        regularized_by: document.getElementById('regBy').value,
+      };
+      if (status) body.status = status;
+
+      const res = await apiCall(`/attendance/${empCode}/${date}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body)
+      });
+      if (res.ok) loadAttendance();
+    }
+
+    async function loadMonthlyAnalytics() {
+      const emp = document.getElementById('anEmpCode').value;
+      const month = document.getElementById('anMonth').value;
+      await apiCall(`/analytics/employees/${emp}/monthly?month=${month}`);
+    }
+
+    async function loadDeptSummary() {
+      const month = document.getElementById('anDeptMonth').value;
+      await apiCall(`/analytics/departments/summary?month=${month}`);
+    }
+
+    async function loadLeaderboard() {
+      const month = document.getElementById('anLeadMonth').value;
+      await apiCall(`/analytics/leaderboard/late?month=${month}`);
+    }
+
+    async function loadTrend() {
+      const dept = document.getElementById('trDept').value;
+      const from = document.getElementById('trFrom').value;
+      const to = document.getElementById('trTo').value;
+      await apiCall(`/analytics/departments/${encodeURIComponent(dept)}/trend?from=${from}&to=${to}`);
+    }
+
+    async function runExplain() {
+      const ep = document.getElementById('explainEndpoint').value;
+      const params = new URLSearchParams({
+        emp_code: 'EMP0001',
+        month: '2026-07',
+        department: 'Engineering',
+        from: '2026-07-06',
+        to: '2026-07-10'
+      });
+      await apiCall(`/admin/explain/${ep}?${params.toString()}`);
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      checkHealth();
+      loadEmployees();
+      loadAttendance();
+    });
+  </script>
+</body>
+</html>
